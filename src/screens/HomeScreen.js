@@ -1,66 +1,68 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList } from 'react-native';
 
 export default function HomeScreen(props) {
-    const [cart, setCart] = useState([])
+    const [data, setData] = useState([])
 
-    const addToCart = (item) => {
-        setCart(prevCart => {
-            const newCart = { ...prevCart }; // 複製之前的cart
-            if (newCart[item]) {
-                newCart[item] += 1; // 如果有這個商品,就+1
-            } else {
-                newCart[item] = 1; // 如果沒有,設為1
-            }
-            return newCart;
-        });
-    };
+    useEffect(() => {
+        fetchData()
+    }, [])
 
+    const fetchData = () => {
+        const REQUEST_URL = 'https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json'
+
+        fetch(REQUEST_URL)
+            .then((response) => response.json())
+            .then((responseData) => {
+                setData(responseData)
+            })
+            .catch((err) => {
+                console.log('error 是 ', err)
+            })
+    }
+
+    const showNoticeDetail = (cases) => {
+        props.navigation.push('HomeDetailScreen', { passProps: cases })
+
+    }
+    const renderBook = (cases) => {
+        return (
+            <TouchableOpacity onPress={() => showNoticeDetail(cases)}>
+                <View>
+
+                    <View style={styles.MainView}>
+                        <View style={{ flex: 1 }}>
+
+                            <Text style={{ color: 'black', fontSize: 15, marginTop: 8 }}>
+                                場站：{cases.sna}{"\n"}
+                                目前可借車數：{cases.available_rent_bikes}{"\n"}
+                                目前還車空位：{cases.available_return_bikes}{"\n"}
+                            </Text>
+
+                            <Text style={{ marginTop: 8, fontSize: 13, marginBottom: 8, color: 'gray' }}>
+                                YouBike2.0系統發布資料更新的時間：{cases.srcUpdateTime}
+                            </Text>
+                        </View>
+
+                    </View>
+                    <View style={styles.seperator} />
+
+                </View>
+            </TouchableOpacity>
+
+        )
+
+    }
 
     return (
         <View style={styles.container}>
-            <Text style={{ fontSize: 35 }}>請選擇想購買的水果</Text>
-            <Text style={{ fontSize: 20 }}> </Text>
-
-            <View style={styles.cart}>
-                <View style={styles.foodItem}>
-                    <Text style={{ fontSize: 20 }}>Banana</Text>
-                    <TouchableOpacity onPress={() => addToCart('🍌')}
-                        style={styles.cartButton}>
-
-                        <Text style={styles.cartButtonText}>+</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.foodItem}>
-                    <Text style={{ fontSize: 20 }}>Apple</Text>
-                    <TouchableOpacity onPress={() => addToCart('🍎')}
-                        style={styles.cartButton}>
-
-                        <Text style={styles.cartButtonText}>+</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.foodItem}>
-                    <Text style={{ fontSize: 20 }}>Tomato</Text>
-                    <TouchableOpacity onPress={() => addToCart('🍅')}
-                        style={styles.cartButton}>
-
-                        <Text style={styles.cartButtonText}>+</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            <Text style={{ fontSize: 30 }}> </Text>
-            <TouchableOpacity onPress={() => props.navigation.push('HomeDetailScreen', { cart: cart })}
-                style={{ backgroundColor: '#00aeef', borderRadius: 20, width: 300, height: 40, justifyContent: 'center', margin: 20 }}>
-                <Text style={{ color: 'white', textAlign: 'center', fontSize: 20 }}>
-                    查看購物車
-                </Text>
-            </TouchableOpacity>
-
-            {/* push(頁面,值) =>傳送 */}
-        </View >
+            <FlatList
+                data={data}
+                renderItem={({ item }) => renderBook(item)}
+                keyExtractor={cases => cases.sno}
+                style={{ backgroundColor: 'white' }}
+            />
+        </View>
     );
 }
 
@@ -70,29 +72,24 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
+        padding: 20,
     },
-    cart: {
-        flexDirection: 'column', // 每個 foodItem 往下排
-        alignItems: 'center',
-    },
-    foodItem: {
+    MainView: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-        gap: 10,
-        fontSize: 30
-    },
-    cartButton: {
-        backgroundColor: '#00aeef',
-        borderRadius: 10,
-        width: 20,
-        height: 20,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'white',
+        padding: 8
     },
-    cartButtonText: {
-        color: 'white',
-        fontSize: 14,
-        textAlign: 'center',
+
+    buttonRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 30,
+    },
+    seperator: {
+        height: 1,
+        backgroundColor: '#dddddd'
     },
 });
